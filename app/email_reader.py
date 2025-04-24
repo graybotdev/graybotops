@@ -3,6 +3,7 @@ import base64
 import pickle
 import re
 import json
+import io
 from datetime import datetime
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -12,13 +13,13 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-SCOPES = ['https://www.googleapis.com/auth/gmail.modify',
-          'https://www.googleapis.com/auth/gmail.readonly',
-          'https://www.googleapis.com/auth/gmail.send'
-          ]
-CLIENT_SECRET_FILE = os.getenv("GOOGLE_OAUTH2_CREDENTIAL_FILE")
-TOKEN_PICKLE = "token.pickle"
+SCOPES = [
+    'https://www.googleapis.com/auth/gmail.modify',
+    'https://www.googleapis.com/auth/gmail.readonly',
+    'https://www.googleapis.com/auth/gmail.send'
+]
 
+TOKEN_PICKLE = "token.pickle"
 
 def get_service():
     creds = None
@@ -30,7 +31,13 @@ def get_service():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
+            cred_json = os.getenv("GOOGLE_OAUTH2_CREDENTIAL_FILE")
+            if not cred_json:
+                raise ValueError("GOOGLE_OAUTH2_CREDENTIAL_FILE not set.")
+            flow = InstalledAppFlow.from_client_secrets_file(
+                io.StringIO(cred_json),
+                SCOPES
+            )
             creds = flow.run_local_server(port=0)
 
         with open(TOKEN_PICKLE, 'wb') as token:
@@ -42,15 +49,13 @@ def get_service():
 def read_recent_messages(query=None, max_results=25):
     service = get_service()
 
-    # Optional custom query to narrow results
     query = query or (
-    'is:unread ('
-    'subject:("Load" OR "Rate Confirmation" OR "Broker" OR "Update" OR "Delayed" '
-    'OR "Accessorial" OR "Detention" OR "Lumper" OR "BOL" OR "Bill of Lading" '
-    'OR "Status" OR "Invoice" OR "Payment") '
-    'OR has:attachment)'
-)
-
+        'is:unread ('
+        'subject:("Load" OR "Rate Confirmation" OR "Broker" OR "Update" OR "Delayed" '
+        'OR "Accessorial" OR "Detention" OR "Lumper" OR "BOL" OR "Bill of Lading" '
+        'OR "Status" OR "Invoice" OR "Payment") '
+        'OR has:attachment)'
+    )
 
     results = service.users().messages().list(userId='me', q=query, maxResults=max_results).execute()
     messages = results.get('messages', [])
@@ -81,21 +86,20 @@ def read_recent_messages(query=None, max_results=25):
                     break
         elif 'body' in payload and 'data' in payload['body']:
             body = base64.urlsafe_b64decode(payload['body']['data']).decode()
-       
-        # 🟣 Mark email as read
+
         service.users().messages().modify(
             userId='me',
             id=msg['id'],
             body={'removeLabelIds': ['UNREAD']}
         ).execute()
-        thread_id = msg_detail.get("threadId")  
-        
+
+        thread_id = msg_detail.get("threadId")
+
         email_data.append({
             "subject": subject,
             "body": body,
             "from": from_email,
             "threadId": thread_id,
-
         })
 
     return email_data
