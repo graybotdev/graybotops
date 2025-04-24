@@ -1,0 +1,6 @@
+[build]
+command = "pip install -r requirements.txt"
+
+[start]
+command = "python test/run_auto_reply_cycle.py"
+
