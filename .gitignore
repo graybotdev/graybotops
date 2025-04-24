@@ -1,0 +1,22 @@
+# Environment + Secrets
+.env
+token.json
+token.pickle
+credentials/
+
+# IDE / OS clutter
+__pycache__/
+*.pyc
+.DS_Store
+
+# Logs
+*.log
+*.csv
+
+# Local-only scripts
+enable_gmail_watch.py
+webhook_listener.py
+mailer_webhook_log.csv
+
+# Railway / build artifacts
+railway.toml

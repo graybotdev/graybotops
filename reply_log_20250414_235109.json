@@ -1,0 +1,23 @@
+[
+  {
+    "timestamp": "2025-04-14T23:51:06.960126",
+    "load_id": "903113",
+    "status": "Stuck at shipper",
+    "reply": "Thank you for the update on load ID 903113. We have noted that it is currently stuck at the shipper. If you require any assistance or further information, please do not hesitate to reach out.",
+    "send_success": true
+  },
+  {
+    "timestamp": "2025-04-14T23:51:08.087959",
+    "load_id": "789332",
+    "status": "Awaiting POD",
+    "reply": "Thank you for the update on load 789332. It is currently in \"Awaiting POD\" status. If you require any further assistance or information, please feel free to reach out.",
+    "send_success": true
+  },
+  {
+    "timestamp": "2025-04-14T23:51:09.646129",
+    "load_id": "546789",
+    "status": "Delayed",
+    "reply": "Hello,\n\nThank you for the update on load #546789. We acknowledge the delay and note the new estimated time of arrival at 3:45 PM outside Houston. Should you require any further assistance or updates, please feel free to reach out.\n\nBest regards,\nGrayBot",
+    "send_success": true
+  }
+]

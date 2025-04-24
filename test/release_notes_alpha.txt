@@ -1,0 +1,10 @@
+GrayBot Alpha - April 15, 2025
+
+✅ Gmail API inbox reader (readonly)
+✅ GPT-driven reply generation
+✅ MailerSend domain-authenticated email sending
+✅ Auto-looping system (5-minute intervals)
+✅ CSV logging of replies
+✅ Manual + autonomous launch modes
+
+Mission: Clarity + Prosperity for brokers & carriers
