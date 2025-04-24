@@ -1,0 +1,26 @@
+[
+  {
+    "timestamp": "2025-04-15T00:31:38.402782",
+    "load_id": "903113",
+    "recipient": "graybot@graybotops.com",
+    "status": "Stuck at shipper",
+    "reply": "Thank you for the update on load 903113. It appears that the shipment is currently stuck at the shipper. We will monitor the situation closely and provide further assistance as needed. If you require any additional support or information, please don't hesitate to reach out.",
+    "send_success": true
+  },
+  {
+    "timestamp": "2025-04-15T00:31:40.657729",
+    "load_id": "789332",
+    "recipient": "graybot@graybotops.com",
+    "status": "Awaiting POD",
+    "reply": "Thank you for the update on load ID 789332. The status is currently \"Awaiting POD\" with no estimated time of arrival provided. The requested document type is Proof of Delivery (POD). If you require any further assistance or updates, please feel free to reach out.",
+    "send_success": true
+  },
+  {
+    "timestamp": "2025-04-15T00:31:42.059411",
+    "load_id": "546789",
+    "recipient": "graybot@graybotops.com",
+    "status": "Delayed",
+    "reply": "Thank you for the update. The load with ID 546789 is currently delayed and the new estimated time of arrival is 3:45PM, updated from the previous ETA of 2:30PM. It is currently located outside Houston. If you require any further assistance or information, feel free to reach out.",
+    "send_success": true
+  }
+]
