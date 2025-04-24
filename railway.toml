@@ -1,5 +1,5 @@
 [build]
-command = "pip install -r requirements.txt"
+builder = "Dockerfile"
 
 [start]
 cmd = "python3 test/run_auto_reply_cycle.py"
