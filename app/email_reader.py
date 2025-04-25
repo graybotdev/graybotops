@@ -3,7 +3,7 @@ import base64
 import pickle
 import re
 import json
-import io
+import tempfile
 from datetime import datetime
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -34,10 +34,13 @@ def get_service():
             cred_json = os.getenv("GOOGLE_OAUTH2_CREDENTIAL_FILE")
             if not cred_json:
                 raise ValueError("GOOGLE_OAUTH2_CREDENTIAL_FILE not set.")
-            flow = InstalledAppFlow.from_client_secrets_file(
-                io.StringIO(cred_json),
-                SCOPES
-            )
+
+            # 🔥 Write the JSON to a temporary file
+            with tempfile.NamedTemporaryFile(mode='w+', delete=False) as tmp:
+                tmp.write(cred_json)
+                tmp.flush()
+                flow = InstalledAppFlow.from_client_secrets_file(tmp.name, SCOPES)
+
             creds = flow.run_local_server(port=0)
 
         with open(TOKEN_PICKLE, 'wb') as token:
