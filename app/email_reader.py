@@ -41,7 +41,8 @@ def get_service():
                 tmp.flush()
                 flow = InstalledAppFlow.from_client_secrets_file(tmp.name, SCOPES)
 
-            creds = flow.run_local_server(port=0)
+            creds = flow.run_console()
+
 
         with open(TOKEN_PICKLE, 'wb') as token:
             pickle.dump(creds, token)
