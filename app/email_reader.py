@@ -1,4 +1,5 @@
 import os
+import io
 import base64
 import pickle
 import re
@@ -6,7 +7,6 @@ import json
 import tempfile
 from datetime import datetime
 from google.auth.transport.requests import Request
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
 
@@ -23,29 +23,29 @@ TOKEN_PICKLE = "token.pickle"
 
 def get_service():
     creds = None
+
+    # Step 1: Try loading local token
     if os.path.exists(TOKEN_PICKLE):
-        with open(TOKEN_PICKLE, 'rb') as token:
-            creds = pickle.load(token)
+        with open(TOKEN_PICKLE, 'rb') as token_file:
+            creds = pickle.load(token_file)
 
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
+    # Step 2: If no local token, load from environment
+    if not creds:
+        token_base64 = os.getenv("TOKEN_PICKLE_BASE64")
+        if not token_base64:
+            raise ValueError("TOKEN_PICKLE_BASE64 environment variable not set.")
+
+        token_bytes = base64.b64decode(token_base64)
+        creds = pickle.loads(token_bytes)
+
+        # Optional: Save token locally for faster future runs
+        with open(TOKEN_PICKLE, 'wb') as f:
+            f.write(token_bytes)
+
+    # Step 3: If token expired, refresh it
+    if not creds.valid:
+        if creds.expired and creds.refresh_token:
             creds.refresh(Request())
-        else:
-            cred_json = os.getenv("GOOGLE_OAUTH2_CREDENTIAL_FILE")
-            if not cred_json:
-                raise ValueError("GOOGLE_OAUTH2_CREDENTIAL_FILE not set.")
-
-            # 🔥 Write the JSON to a temporary file
-            with tempfile.NamedTemporaryFile(mode='w+', delete=False) as tmp:
-                tmp.write(cred_json)
-                tmp.flush()
-                flow = InstalledAppFlow.from_client_secrets_file(tmp.name, SCOPES)
-
-            creds = flow.run_console()
-
-
-        with open(TOKEN_PICKLE, 'wb') as token:
-            pickle.dump(creds, token)
 
     return build('gmail', 'v1', credentials=creds)
 
