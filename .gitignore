@@ -3,6 +3,8 @@
 token.json
 token.pickle
 credentials/
+credentials_gmail_readonly.json
+
 
 # IDE / OS clutter
 __pycache__/
