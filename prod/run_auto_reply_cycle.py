@@ -90,6 +90,8 @@ for msg in parsed_messages:
     original_subject_line = msg.get("subject", "").strip()
     thread_id = msg.get("thread_id", None)
 
+    print(f"🔎 Checking email from: {to_email} | Subject: {original_subject_line}")
+
     if (
         not to_email or
         "mailer-daemon" in to_email.lower() or
@@ -100,7 +102,9 @@ for msg in parsed_messages:
         continue
 
     if any(trigger in content for trigger in TRIGGER_STATUSES):
+        print(f"✅ Trigger matched for: {original_subject_line}")
         reply, model_used = generate_reply(msg)
+
 
         if reply:
             # Clean up subject line
