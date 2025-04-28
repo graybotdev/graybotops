@@ -25,7 +25,7 @@ TRIGGER_STATUSES = [
     "drop", "pickup", "pu", "del", "eta", "appointment", "check call", "where's the truck", "location"
 ]
 
-LOG_FILE = os.path.join(os.path.dirname(__file__), "email_log.csv")
+LOG_FILE = os.path.join(os.path.dirname(__file__), "..", "logs", "email_log.csv")
 
 def generate_reply(parsed_data):
     from app.firework_client import run_firework_model
