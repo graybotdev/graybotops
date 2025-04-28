@@ -16,6 +16,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# 📂 Ensure /logs/ folder exists
+logs_dir = os.path.join(os.path.dirname(__file__), "..", "logs")
+os.makedirs(logs_dir, exist_ok=True)
+
 # Trigger vocab
 TRIGGER_STATUSES = [
     "ready", "available", "loaded", "call", "tracking", "update", "in transit", "status",
@@ -25,7 +29,8 @@ TRIGGER_STATUSES = [
     "drop", "pickup", "pu", "del", "eta", "appointment", "check call", "where's the truck", "location"
 ]
 
-LOG_FILE = os.path.join(os.path.dirname(__file__), "..", "logs", "email_log.csv")
+# 📄 Set correct log file path
+LOG_FILE = os.path.join(logs_dir, "email_log.csv")
 
 def generate_reply(parsed_data):
     from app.firework_client import run_firework_model
