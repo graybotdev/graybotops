@@ -146,3 +146,9 @@ for msg in parsed_messages:
             print(f"🚨 No reply generated for {to_email} | Subject: {original_subject_line}")
     else:
         print(f"❌ No trigger match — skipping: {original_subject_line}")
+
+        # Keep the app alive to serve the Flask dashboard
+print("✅ Reply cycle complete. Flask server is running.")
+while True:
+    time.sleep(10)
+
