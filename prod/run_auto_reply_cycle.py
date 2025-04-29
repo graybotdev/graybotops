@@ -4,21 +4,29 @@ import sys
 import json
 import csv
 import time
+import threading
 from datetime import datetime
+from dotenv import load_dotenv
 
-# Setup imports
+# Flask server import
+from prod.download_log_server import app as flask_app
+
+# App modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from app.email_reader import read_recent_messages, save_to_json
 from app.gpt_replies import build_prompt
 from app.gmail_service import send_email
-from app.ai_model_router import generate_response
-from dotenv import load_dotenv
+from app.firework_client import run_firework_model
+from app.openai_client import run_openai_model
 
 load_dotenv()
 
-# 📂 Ensure /logs/ folder exists
+# Ensure /logs/ exists
 logs_dir = os.path.join(os.path.dirname(__file__), "..", "logs")
 os.makedirs(logs_dir, exist_ok=True)
+
+# CSV path
+LOG_FILE = os.path.join(logs_dir, "email_log.csv")
 
 # Trigger vocab
 TRIGGER_STATUSES = [
@@ -29,18 +37,21 @@ TRIGGER_STATUSES = [
     "drop", "pickup", "pu", "del", "eta", "appointment", "check call", "where's the truck", "location"
 ]
 
-# 📄 Set correct log file path
-LOG_FILE = os.path.join(logs_dir, "email_log.csv")
+# Flask background runner
+def run_flask_server():
+    port = int(os.environ.get("PORT", 8080))
+    flask_app.run(host="0.0.0.0", port=port)
+
+# Start Flask server thread
+flask_thread = threading.Thread(target=run_flask_server)
+flask_thread.daemon = True
+flask_thread.start()
 
 def generate_reply(parsed_data):
-    from app.firework_client import run_firework_model
-    from app.openai_client import run_openai_model
-
     prompt = build_prompt(parsed_data)
     start = time.time()
     model_used = None
 
-    # Try Firework first
     reply = run_firework_model(prompt)
     if reply:
         model_used = "Firework"
@@ -74,13 +85,13 @@ if not FILENAME:
 with open(FILENAME, "r", encoding="utf-8") as f:
     parsed_messages = json.load(f)
 
-# Step 3: Ensure log file exists
+# Step 3: Ensure CSV exists
 if not os.path.exists(LOG_FILE):
     with open(LOG_FILE, mode="w", newline="", encoding="utf-8") as log:
         writer = csv.writer(log)
         writer.writerow(["timestamp", "to_email", "subject", "model_used", "response"])
 
-# Step 4: Process and respond to messages
+# Step 4: Process messages
 for msg in parsed_messages:
     body = msg.get("body", "").lower()
     subject = msg.get("subject", "").lower()
@@ -105,25 +116,19 @@ for msg in parsed_messages:
         print(f"✅ Trigger matched for: {original_subject_line}")
         reply, model_used = generate_reply(msg)
 
-
         if reply:
-            # Clean up subject line
             base_subject = original_subject_line
             for tag in ["[SUCCESS]", "[FAILURE]", "[FW]", "[GPT]"]:
-                if tag in base_subject:
-                    base_subject = base_subject.replace(tag, "").strip()
+                base_subject = base_subject.replace(tag, "").strip()
 
-            # Build updated subject
             model_tag = "[FW]" if model_used == "Firework" else "[GPT]"
             updated_subject = f"{base_subject} [SUCCESS] {model_tag}".strip()
 
             print(f"📨 Reply ready for {to_email} using {model_used}")
             print(reply)
 
-            # ✅ Send reply via Gmail
             send_email(to_email, updated_subject, reply, thread_id=thread_id)
 
-            # 📁 Log to CSV
             with open(LOG_FILE, mode="a", newline="", encoding="utf-8") as log:
                 writer = csv.writer(log)
                 writer.writerow([
@@ -134,15 +139,10 @@ for msg in parsed_messages:
                     reply
                 ])
         else:
-            # Clean up subject line for failure
             base_subject = original_subject_line
             for tag in ["[SUCCESS]", "[FAILURE]", "[FW]", "[GPT]"]:
-                if tag in base_subject:
-                    base_subject = base_subject.replace(tag, "").strip()
-
+                base_subject = base_subject.replace(tag, "").strip()
             updated_subject = f"{base_subject} [FAILURE]".strip()
-
             print(f"🚨 No reply generated for {to_email} | Subject: {original_subject_line}")
-            # No email sent on failure unless you want to customize further
     else:
         print(f"❌ No trigger match — skipping: {original_subject_line}")
