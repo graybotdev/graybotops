@@ -9,7 +9,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 
 # Flask app import
-from prod.download_log_server import app as flask_app
+from download_log_server import app as flask_app
 
 # App modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
