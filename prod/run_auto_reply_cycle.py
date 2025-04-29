@@ -8,7 +8,7 @@ import threading
 from datetime import datetime
 from dotenv import load_dotenv
 
-# Flask server import
+# Flask app import
 from prod.download_log_server import app as flask_app
 
 # App modules
@@ -42,7 +42,7 @@ def run_flask_server():
     port = int(os.environ.get("PORT", 8080))
     flask_app.run(host="0.0.0.0", port=port)
 
-# Start Flask server thread
+# Start Flask server in background
 flask_thread = threading.Thread(target=run_flask_server)
 flask_thread.daemon = True
 flask_thread.start()
@@ -70,85 +70,85 @@ def generate_reply(parsed_data):
         print("🚨 Failed to generate a reply.")
         return None, None
 
-# Step 1: Read unread Gmail emails
-messages = read_recent_messages()
-save_to_json(messages)
+if __name__ == "__main__":
+    # Step 1: Read unread Gmail emails
+    messages = read_recent_messages()
+    save_to_json(messages)
 
-# Step 2: Load latest parsed results
-files = sorted(glob.glob("test/parsed_results_*.json"), key=os.path.getmtime, reverse=True)
-FILENAME = files[0] if files else None
+    # Step 2: Load latest parsed results
+    files = sorted(glob.glob("test/parsed_results_*.json"), key=os.path.getmtime, reverse=True)
+    FILENAME = files[0] if files else None
 
-if not FILENAME:
-    print("❌ No parsed results found.")
-    exit()
+    if not FILENAME:
+        print("❌ No parsed results found.")
+        exit()
 
-with open(FILENAME, "r", encoding="utf-8") as f:
-    parsed_messages = json.load(f)
+    with open(FILENAME, "r", encoding="utf-8") as f:
+        parsed_messages = json.load(f)
 
-# Step 3: Ensure CSV exists
-if not os.path.exists(LOG_FILE):
-    with open(LOG_FILE, mode="w", newline="", encoding="utf-8") as log:
-        writer = csv.writer(log)
-        writer.writerow(["timestamp", "to_email", "subject", "model_used", "response"])
+    # Step 3: Ensure CSV exists
+    if not os.path.exists(LOG_FILE):
+        with open(LOG_FILE, mode="w", newline="", encoding="utf-8") as log:
+            writer = csv.writer(log)
+            writer.writerow(["timestamp", "to_email", "subject", "model_used", "response"])
 
-# Step 4: Process messages
-for msg in parsed_messages:
-    body = msg.get("body", "").lower()
-    subject = msg.get("subject", "").lower()
-    content = f"{subject} {body}"
+    # Step 4: Process messages
+    for msg in parsed_messages:
+        body = msg.get("body", "").lower()
+        subject = msg.get("subject", "").lower()
+        content = f"{subject} {body}"
 
-    to_email = msg.get("from", "").strip()
-    original_subject_line = msg.get("subject", "").strip()
-    thread_id = msg.get("thread_id", None)
+        to_email = msg.get("from", "").strip()
+        original_subject_line = msg.get("subject", "").strip()
+        thread_id = msg.get("thread_id", None)
 
-    print(f"🔎 Checking email from: {to_email} | Subject: {original_subject_line}")
+        print(f"🔎 Checking email from: {to_email} | Subject: {original_subject_line}")
 
-    if (
-        not to_email or
-        "mailer-daemon" in to_email.lower() or
-        "noreply" in to_email.lower() or
-        "delivery status notification" in subject
-    ):
-        print(f"⚠️ Skipping invalid or automated email: {to_email} | Subject: {original_subject_line}")
-        continue
+        if (
+            not to_email or
+            "mailer-daemon" in to_email.lower() or
+            "noreply" in to_email.lower() or
+            "delivery status notification" in subject
+        ):
+            print(f"⚠️ Skipping invalid or automated email: {to_email} | Subject: {original_subject_line}")
+            continue
 
-    if any(trigger in content for trigger in TRIGGER_STATUSES):
-        print(f"✅ Trigger matched for: {original_subject_line}")
-        reply, model_used = generate_reply(msg)
+        if any(trigger in content for trigger in TRIGGER_STATUSES):
+            print(f"✅ Trigger matched for: {original_subject_line}")
+            reply, model_used = generate_reply(msg)
 
-        if reply:
-            base_subject = original_subject_line
-            for tag in ["[SUCCESS]", "[FAILURE]", "[FW]", "[GPT]"]:
-                base_subject = base_subject.replace(tag, "").strip()
+            if reply:
+                base_subject = original_subject_line
+                for tag in ["[SUCCESS]", "[FAILURE]", "[FW]", "[GPT]"]:
+                    base_subject = base_subject.replace(tag, "").strip()
 
-            model_tag = "[FW]" if model_used == "Firework" else "[GPT]"
-            updated_subject = f"{base_subject} [SUCCESS] {model_tag}".strip()
+                model_tag = "[FW]" if model_used == "Firework" else "[GPT]"
+                updated_subject = f"{base_subject} [SUCCESS] {model_tag}".strip()
 
-            print(f"📨 Reply ready for {to_email} using {model_used}")
-            print(reply)
+                print(f"📨 Reply ready for {to_email} using {model_used}")
+                print(reply)
 
-            send_email(to_email, updated_subject, reply, thread_id=thread_id)
+                send_email(to_email, updated_subject, reply, thread_id=thread_id)
 
-            with open(LOG_FILE, mode="a", newline="", encoding="utf-8") as log:
-                writer = csv.writer(log)
-                writer.writerow([
-                    datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
-                    to_email,
-                    updated_subject,
-                    model_used,
-                    reply
-                ])
+                with open(LOG_FILE, mode="a", newline="", encoding="utf-8") as log:
+                    writer = csv.writer(log)
+                    writer.writerow([
+                        datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+                        to_email,
+                        updated_subject,
+                        model_used,
+                        reply
+                    ])
+            else:
+                base_subject = original_subject_line
+                for tag in ["[SUCCESS]", "[FAILURE]", "[FW]", "[GPT]"]:
+                    base_subject = base_subject.replace(tag, "").strip()
+                updated_subject = f"{base_subject} [FAILURE]".strip()
+                print(f"🚨 No reply generated for {to_email} | Subject: {original_subject_line}")
         else:
-            base_subject = original_subject_line
-            for tag in ["[SUCCESS]", "[FAILURE]", "[FW]", "[GPT]"]:
-                base_subject = base_subject.replace(tag, "").strip()
-            updated_subject = f"{base_subject} [FAILURE]".strip()
-            print(f"🚨 No reply generated for {to_email} | Subject: {original_subject_line}")
-    else:
-        print(f"❌ No trigger match — skipping: {original_subject_line}")
+            print(f"❌ No trigger match — skipping: {original_subject_line}")
 
-        # Keep the app alive to serve the Flask dashboard
-print("✅ Reply cycle complete. Flask server is running.")
-while True:
-    time.sleep(10)
-
+    # Keep container alive for Flask dashboard
+    print("✅ Reply cycle complete. Flask server is running.")
+    while True:
+        time.sleep(10)
