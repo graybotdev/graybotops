@@ -13,7 +13,7 @@ __pycache__/
 
 # Logs
 *.log
-*.csv
+!logs/email_log.csv # allow this specific log file
 
 # Local-only scripts
 enable_gmail_watch.py

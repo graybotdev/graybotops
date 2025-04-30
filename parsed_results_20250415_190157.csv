@@ -1,0 +1,4 @@
+load_id,status,eta,old_eta,new_eta,pickup_date,pickup_time,delivery_date,delivery_time,route,location,doc_type_requested,driver_name,truck_number,from
+712094,,,,,,,,,,,,,,graybot@graybotops.com
+999123,,,,,,,,,,,,,,Christopher.Anthony31@outlook.com
+712094,Awaiting BOL,,,,,,,,,for Load #712094 at 1:15PM and,BOL,,,christophercampos750@gmail.com

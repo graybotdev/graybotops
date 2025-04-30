@@ -1,0 +1,4 @@
+timestamp,load_id,status,send_success
+2025-04-14T23:51:06.960126,903113,Stuck at shipper,True
+2025-04-14T23:51:08.087959,789332,Awaiting POD,True
+2025-04-14T23:51:09.646129,546789,Delayed,True

@@ -1,0 +1,4 @@
+timestamp,load_id,recipient,status,send_success
+2025-04-15T14:20:20.064977,903113,graybot@graybotops.com,Stuck at shipper,True
+2025-04-15T14:20:21.295012,789332,graybot@graybotops.com,Awaiting POD,True
+2025-04-15T14:20:23.150027,546789,graybot@graybotops.com,Delayed,True
