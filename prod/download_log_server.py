@@ -8,7 +8,7 @@ auth = HTTPBasicAuth()
 
 # USERNAME + PASSWORD CONFIG
 users = {
-    "admin": generate_password_hash("your_secure_password")
+    "admin": generate_password_hash("U7nsXqa1mwb@ob")
 }
 
 @auth.verify_password
