@@ -1,9 +1,22 @@
-from flask import Flask, send_from_directory, after_this_request
+from flask import Flask, send_from_directory, request
+from flask_httpauth import HTTPBasicAuth
+from werkzeug.security import generate_password_hash, check_password_hash
 import os
 
 app = Flask(__name__)
+auth = HTTPBasicAuth()
 
-# Where the logs are stored relative to this file
+# USERNAME + PASSWORD CONFIG
+users = {
+    "admin": generate_password_hash("your_secure_password")
+}
+
+@auth.verify_password
+def verify_password(username, password):
+    if username in users and check_password_hash(users.get(username), password):
+        return username
+
+# Where the logs are stored
 LOGS_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "logs"))
 
 @app.after_request
@@ -12,6 +25,7 @@ def add_security_headers(response):
     return response
 
 @app.route("/")
+@auth.login_required
 def home():
     return """
     <html>
@@ -27,6 +41,7 @@ def home():
     """
 
 @app.route("/download-log")
+@auth.login_required
 def download_log():
     filename = "email_log.csv"
     file_path = os.path.join(LOGS_FOLDER, filename)
@@ -34,9 +49,9 @@ def download_log():
     if not os.path.exists(file_path):
         return "Log file not found.", 404
 
-    print("📥 Log download requested")
+    print(f"📥 {auth.current_user()} downloaded the log.")
     return send_from_directory(LOGS_FOLDER, filename, as_attachment=True)
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))  # Railway sets $PORT at runtime
+    port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
