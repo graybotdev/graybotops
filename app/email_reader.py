@@ -1,11 +1,15 @@
 import os
+import json
 import pickle
 import base64
-import json
+from dotenv import load_dotenv
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-# Load Gmail credentials from base64-encoded token
+# ✅ Load environment variables from .env file
+load_dotenv()
+
+# 🔐 Load Gmail credentials from base64-encoded token
 TOKEN_BASE64 = os.getenv("TOKEN_PICKLE_BASE64")
 
 def get_service():
