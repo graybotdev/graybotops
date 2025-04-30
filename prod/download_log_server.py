@@ -9,8 +9,16 @@ LOGS_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "log
 @app.route("/")
 def home():
     return """
-    <h1>GrayBotOps Logs</h1>
-    <p><a href="/download-log">Download Latest Log CSV</a></p>
+     <html>
+    <head>
+        <title>GrayBotOps Logs</title>
+    </head>
+    <body style="text-align: center; font-family: Arial, sans-serif; margin-top: 50px;">
+        <img src="/static/graybot_logo.png" alt="GrayBot Logo" style="width: 300px; margin-bottom: 20px;">
+        <h1>GrayBotOps Logs Dashboard</h1>
+        <p><a href="/download-log" style="font-size: 20px;">⬇️ Download Latest Log CSV</a></p>
+    </body>
+    </html>
     """
 
 @app.route("/download-log")
