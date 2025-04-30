@@ -1,4 +1,4 @@
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, after_this_request
 import os
 
 app = Flask(__name__)
@@ -6,15 +6,20 @@ app = Flask(__name__)
 # Where the logs are stored relative to this file
 LOGS_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "logs"))
 
+@app.after_request
+def add_security_headers(response):
+    response.headers["X-Frame-Options"] = "DENY"
+    return response
+
 @app.route("/")
 def home():
     return """
-     <html>
+    <html>
     <head>
         <title>GrayBotOps Logs</title>
     </head>
     <body style="text-align: center; font-family: Arial, sans-serif; margin-top: 50px;">
-        <img src="/static/graybot_logo.png" alt="GrayBot Logo" style="width: 300px; margin-bottom: 20px;">
+        <img src="/static/graybot_logo.png?v=1" alt="GrayBot Logo" style="width: 300px; margin-bottom: 20px;">
         <h1>GrayBotOps Logs Dashboard</h1>
         <p><a href="/download-log" style="font-size: 20px;">⬇️ Download Latest Log CSV</a></p>
     </body>
@@ -29,6 +34,7 @@ def download_log():
     if not os.path.exists(file_path):
         return "Log file not found.", 404
 
+    print("📥 Log download requested")
     return send_from_directory(LOGS_FOLDER, filename, as_attachment=True)
 
 if __name__ == "__main__":
