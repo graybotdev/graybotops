@@ -37,7 +37,7 @@ TRIGGER_STATUSES = [
 # Log headers (if not exist)
 for file_path, headers in [
     (LOG_FILE, ["timestamp", "to_email", "subject", "model_used", "response"]),
-    (FAILURE_FILE, ["timestamp", "to_email", "subject", "reason"])
+    (FAILURE_FILE, ["timestamp", "to_email", "subject", "model_used", "reason"])
 ]:
     if not os.path.exists(file_path):
         with open(file_path, mode="w", newline="", encoding="utf-8") as f:
@@ -74,7 +74,7 @@ def generate_reply(parsed_data):
         return reply, model_used
     else:
         print("🚨 Failed to generate a reply.")
-        return None, None
+        return None, model_used
 
 if __name__ == "__main__":
     messages = read_recent_messages()
@@ -120,6 +120,7 @@ if __name__ == "__main__":
 
             if reply:
                 model_tag = "[FW]" if model_used == "Firework" else "[GPT]"
+                model_label = "firework" if model_used == "Firework" else "gpt"
                 updated_subject = f"{base_subject} [SUCCESS] {model_tag}".strip()
 
                 print(f"📨 Reply ready for {to_email} using {model_used}")
@@ -133,12 +134,13 @@ if __name__ == "__main__":
                         datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
                         to_email,
                         updated_subject,
-                        model_used,
+                        model_label,
                         reply
                     ])
                     log.flush()
             else:
                 updated_subject = f"{base_subject} [FAILURE]".strip()
+                model_label = model_used.lower() if model_used else "none"
                 print(f"🚨 No reply generated for {to_email} | Subject: {original_subject_line}")
                 with open(FAILURE_FILE, mode="a", newline="", encoding="utf-8") as fail_log:
                     writer = csv.writer(fail_log)
@@ -146,6 +148,7 @@ if __name__ == "__main__":
                         datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
                         to_email,
                         original_subject_line,
+                        model_label,
                         "No reply generated"
                     ])
                     fail_log.flush()
