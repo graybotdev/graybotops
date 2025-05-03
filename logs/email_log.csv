@@ -1,6 +1,5 @@
 timestamp,to_email,subject,model_used,response
-2025-04-29 23:00:00,carrier@example.com,Test Subject [SUCCESS] [FW],Firework,This is a test reply.
-
+2025-05-01 14:23:00,test@carrier.com,Update on Load,GPT,The driver is on the way
 2025-04-16 02:53:07.346893,graybot@graybotops.com,RE: No Subject,"Hello,
 
 Thank you for the update on load #712094. It's currently in ""awaiting BOL"" status at the specified location. If you need any additional assistance or information, please don't hesitate to contact us.
