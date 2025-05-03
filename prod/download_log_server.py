@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 auth = HTTPBasicAuth()
 
+# Auth setup
 users = {
     "admin": generate_password_hash("U7nsXqa1mwb@ob")
 }
@@ -30,7 +31,7 @@ def add_security_headers(response):
 @app.route("/")
 @auth.login_required
 def home():
-    # Load log
+    # Load email log
     log_path = os.path.join(LOGS_FOLDER, "email_log.csv")
     if not os.path.exists(log_path):
         return "No log data yet."
@@ -39,7 +40,7 @@ def home():
     df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
     df['date'] = df['timestamp'].dt.date
 
-    # Count replies over 7 days
+    # Replies over last 7 days
     today = datetime.utcnow().date()
     last_7_days = df[df['date'] >= (today - timedelta(days=6))]
     reply_counts = last_7_days.groupby('date').size().reindex(
@@ -47,22 +48,38 @@ def home():
         fill_value=0
     )
 
-    fig = go.Figure(data=[
+    reply_fig = go.Figure(data=[
         go.Bar(
             x=[str(date) for date in reply_counts.index],
             y=reply_counts.values,
             marker=dict(color='royalblue')
         )
     ])
-    fig.update_layout(
+    reply_fig.update_layout(
         title="Replies Over the Last 7 Days",
         xaxis_title="Date",
         yaxis_title="Reply Count",
         template="plotly_white"
     )
+    graph_json = json.dumps(reply_fig, cls=PlotlyJSONEncoder)
 
-    graph_json = json.dumps(fig, cls=PlotlyJSONEncoder)
-    return render_template("dashboard.html", graph_json=graph_json)
+    # GPT vs Firework usage chart
+    model_counts = df['model_used'].str.lower().value_counts().reindex(['gpt', 'firework'], fill_value=0)
+    model_fig = go.Figure(data=[
+        go.Pie(
+            labels=model_counts.index.str.upper(),
+            values=model_counts.values,
+            hole=0.4,
+            marker=dict(colors=['#636EFA', '#EF553B'])
+        )
+    ])
+    model_fig.update_layout(
+        title="Model Usage Breakdown (GPT vs Firework)",
+        template="plotly_white"
+    )
+    model_graph_json = json.dumps(model_fig, cls=PlotlyJSONEncoder)
+
+    return render_template("dashboard.html", graph_json=graph_json, model_graph_json=model_graph_json)
 
 @app.route("/download-log")
 @auth.login_required
@@ -70,4 +87,6 @@ def download_log():
     filename = "email_log.csv"
     file_path = os.path.join(LOGS_FOLDER, filename)
     if not os.path.exists(file_path):
-        return send_from_directory(LOGS_FOLDER, filename, as_attachment=True)
+        return "Log file not found.", 404
+    print(f"📥 {auth.current_user()} downloaded the log.")
+    return send_from_directory(LOGS_FOLDER, filename, as_attachment=True)
