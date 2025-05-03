@@ -2,4 +2,24 @@
 <html>
 <head>
     <title>GrayBotOps Dashboard</title>
-   
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body style="font-family: Arial; text-align: center;">
+    <img src="/static/graybot_logo.png?v=1" alt="GrayBot Logo" style="width: 300px; margin-top: 30px;">
+    <h1>GrayBotOps Logs Dashboard</h1>
+
+    <p><a href="/download-log" style="font-size: 18px;">⬇️ Download Latest Log CSV</a></p>
+
+    <div id="repliesChart" style="margin-top: 50px;"></div>
+    <div id="modelChart" style="margin-top: 50px;"></div>
+
+    <script>
+        var graph = JSON.parse('{{ graph_json | tojson | safe }}');
+        Plotly.newPlot('repliesChart', graph.data, graph.layout);
+    
+        var modelGraph = JSON.parse('{{ model_graph_json | tojson | safe }}');
+        Plotly.newPlot('modelChart', modelGraph.data, modelGraph.layout);
+    </script>
+    
+</body>
+</html>
