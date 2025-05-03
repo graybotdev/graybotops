@@ -1,2 +1,5 @@
-timestamp,to_email,subject,model_used,error_message
-2023-10-01 12:00:00,
+timestamp,to_email,subject,model_used,reason
+2025-04-27 09:30:00,test1@carrier.com,Update on Load,firework,Timeout error
+2025-04-28 12:00:00,test2@carrier.com,Where's the truck?,gpt,Rate limit hit
+2025-05-01 16:00:00,test3@carrier.com,Tracking info request,firework,Model crashed
+2025-05-02 10:30:00,test4@carrier.com,Check on driver,gpt,Empty response
