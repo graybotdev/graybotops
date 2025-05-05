@@ -20,6 +20,15 @@
         var modelGraph = {{ model_graph_json | safe }};
         Plotly.newPlot('modelChart', modelGraph.data, modelGraph.layout);
     </script>
+    
+    <div id="failuresChart" style="margin-top: 50px;"></div>
+    
+    <script>
+         if ({{ fail_graph_json is not none | lower }}) {
+                var failGraph = {{ fail_graph_json | safe }};
+                Plotly.newPlot('failuresChart', failGraph.data, failGraph.layout);
+            }
+        </script>
         
 </body>
 </html>

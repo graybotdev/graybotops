@@ -11,7 +11,6 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 auth = HTTPBasicAuth()
 
-# Auth setup
 users = {
     "admin": generate_password_hash("U7nsXqa1mwb@ob")
 }
@@ -31,7 +30,6 @@ def add_security_headers(response):
 @app.route("/")
 @auth.login_required
 def home():
-    # Load email log
     log_path = os.path.join(LOGS_FOLDER, "email_log.csv")
     if not os.path.exists(log_path):
         return "No log data yet."
@@ -63,7 +61,7 @@ def home():
     )
     graph_json = json.dumps(reply_fig, cls=PlotlyJSONEncoder)
 
-    # GPT vs Firework usage chart
+    # Model usage pie chart
     model_counts = df['model_used'].str.lower().value_counts().reindex(['gpt', 'firework'], fill_value=0)
     model_fig = go.Figure(data=[
         go.Pie(
@@ -79,7 +77,42 @@ def home():
     )
     model_graph_json = json.dumps(model_fig, cls=PlotlyJSONEncoder)
 
-    return render_template("dashboard.html", graph_json=graph_json, model_graph_json=model_graph_json)
+    # Failures over last 7 days
+    fail_path = os.path.join(LOGS_FOLDER, "failures.csv")
+    fail_graph_json = None
+
+    if os.path.exists(fail_path):
+        fail_df = pd.read_csv(fail_path)
+        fail_df['timestamp'] = pd.to_datetime(fail_df['timestamp'], errors='coerce')
+        fail_df['date'] = fail_df['timestamp'].dt.date
+
+        last_7_failures = fail_df[fail_df['date'] >= (today - timedelta(days=6))]
+        failure_counts = last_7_failures.groupby('date').size().reindex(
+            [today - timedelta(days=i) for i in reversed(range(7))],
+            fill_value=0
+        )
+
+        fail_fig = go.Figure(data=[
+            go.Bar(
+                x=[str(date) for date in failure_counts.index],
+                y=failure_counts.values,
+                marker=dict(color='crimson')
+            )
+        ])
+        fail_fig.update_layout(
+            title="Failures Over the Last 7 Days",
+            xaxis_title="Date",
+            yaxis_title="Failure Count",
+            template="plotly_white"
+        )
+        fail_graph_json = json.dumps(fail_fig, cls=PlotlyJSONEncoder)
+
+    return render_template(
+        "dashboard.html",
+        graph_json=graph_json,
+        model_graph_json=model_graph_json,
+        fail_graph_json=fail_graph_json
+    )
 
 @app.route("/download-log")
 @auth.login_required
